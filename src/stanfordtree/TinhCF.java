@@ -6,7 +6,9 @@
 package stanfordtree;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Stack;
+import java.util.StringTokenizer;
 
 /**
  *
@@ -42,51 +44,53 @@ public class TinhCF {
         this.luat = luat;
     }
 
+    public String chuanhoaLuat(String rule) {
+        String result = null;
+        rule = rule.replace(" ", "");
+        rule = rule.replace("(", ",(,");
+        rule = rule.replace(")", ",),");
+        rule = rule.replace("^", ",^,");
+        rule = rule.replace("v", ",v,");
+        rule = rule.replace("", "");
+        rule = rule.replace("!", "!,");
+        rule = rule.replace(",,", ",");
+        if (rule.charAt(0) == ',') {
+            rule = rule.substring(1, rule.length());
+        }
+        return rule;
+    }
+
     public float phanTichLuat() {
-        byte[] luatParser = this.luat.getBytes(StandardCharsets.US_ASCII);
-        
+        float result = 0;
         Stack<Float> value = new Stack<>();
-        Stack<Byte> ops = new Stack<>();
-        int i = 0;
-        while (i < luatParser.length) {
-            if (ignoreWhitespace(luatParser[i])) {
-                i++;
-                continue;
-            }
-            if (luatParser[i] == 39) {
-                StringBuffer buffer = new StringBuffer();
-                while (i + 1 < luatParser.length && luatParser[i + 1] != 39) {
-                    buffer.append(Character.toString((char) luatParser[++i]));
-                }
-                i++;
-                float result = StanfordTreeController.lstSuKien.getValue(buffer.toString());
-                if (result == 0) {
-                    result = deQuiTinhCF(buffer.toString());
-                }
-                value.push(result);
-            } else if (luatParser[i] == '(') {
-                ops.add(luatParser[i]);
-            } else if (luatParser[i] == ')') {
-                while (ops.peek() != '(') {
+        Stack<String> ops = new Stack<>();
+        String luat = chuanhoaLuat(this.getLuat());
+        StringTokenizer token = new StringTokenizer(luat, ",");
+        while (token.hasMoreTokens()) {
+            String a = token.nextToken();
+            if (isOperator(a)) {
+                ops.push(a);
+            } else if (a.equals("(")) {
+                ops.add(a);
+            } else if (a.equals(")")) {
+                while (!ops.peek().equals("(")) {
                     value.push(applyOps(ops.pop(), value));
                 }
                 ops.pop();
-            } else if (isOperator(luatParser[i])) {
-                ops.push(luatParser[i]);
+            } else if (!isOperator(a)) {
+                float getCF = StanfordTreeController.lstSuKien.getValue(a);
+                if (getCF == 0) {
+                    getCF = deQuiTinhCF(a);
+                }
+                value.push(getCF);
             }
-            i++;
-        }
-        while (!ops.empty()) {
-            value.push(applyOps(ops.pop(),value));
-        }
-        return value.pop();
-    }
 
-    public boolean ignoreWhitespace(byte b) {
-        if (b == ' ') {
-            return true;
         }
-        return false;
+        while (!ops.isEmpty()) {
+            value.push(applyOps(ops.pop(), value));
+        }
+        result = value.pop();
+        return result;
     }
 
     public boolean isOperator(byte b) {
@@ -95,26 +99,31 @@ public class TinhCF {
         }
         return false;
     }
-    private Float applyOps(Byte ops,Stack<Float>stack) {
+
+    public boolean isOperator(String b) {
+        final String[] ops = {"v", "^", "!"};
+        return Arrays.asList(ops).contains(b);
+    }
+
+    private Float applyOps(String ops, Stack<Float> stack) {
         float result = 0;
         float val1 = stack.pop();
         float val2 = 0;
         SuKien s1 = new SuKien("temp1", val1);
         SuKien s2 = new SuKien("temp2", val2);
-        switch (ops) {
-            case '^':
-                val2 = stack.pop();
-                s2.setGiaTri(val2);
-                result = s1.and(s2);
-                break;
-            case 'v':
-                val2 = stack.pop();
-                s2.setGiaTri(val2);
-                result = s1.or(s2);
-                break;
-            case '!':
-                result = s1.not();
-                break;
+        if (ops.equals("^")) {
+
+            val2 = stack.pop();
+            s2.setGiaTri(val2);
+            result = s1.and(s2);
+        } else if (ops.equals("v")) {
+            val2 = stack.pop();
+            s2.setGiaTri(val2);
+            result = s1.or(s2);
+
+        } else if (ops.equals("!")) {
+
+            result = s1.not();
         }
         return result;
     }

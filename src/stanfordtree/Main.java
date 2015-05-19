@@ -5,6 +5,8 @@
  */
 package stanfordtree;
 
+import java.util.StringTokenizer;
+
 /**
  *
  * @author Nhuan
@@ -27,5 +29,24 @@ public class Main {
     public static void main(String [] args)
     {
         Main m = new Main();
+//        
+//        String rule = "(A & B) | !(C&B)";
+//        rule = rule.replace(" ", "");
+//        rule = rule.replace("(", ",(,");
+//        rule = rule.replace(")", ",),");
+//        rule = rule.replace("&", ",&,");
+//        rule = rule.replace("|", ",|,");
+//        rule = rule.replace("", "");
+//        rule = rule.replace("!", "!,");
+//        rule = rule.replace(",,", ",");
+//        if(rule.charAt(0)==',') 
+//            rule = rule.substring(1, rule.length());
+//        StringTokenizer token = new StringTokenizer(rule,",");
+//        while(token.hasMoreTokens())
+//        {
+//            boolean result = token.nextToken()=="&";
+//            System.out.println("token: "+result);
+//        }
+//        System.out.println("rule phan tich " + rule);
     }
 }
